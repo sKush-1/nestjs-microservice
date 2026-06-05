@@ -20,7 +20,7 @@ export class UsersService {
 
         return this.userModel.findOneAndUpdate(
             {
-                clearkUserId: clerkUserId
+                clerkUserId: clerkUserId
             },
             {
                 $set: {

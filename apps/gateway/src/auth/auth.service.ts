@@ -65,7 +65,8 @@ export class AuthService {
           
 
         } catch (error) {
-            throw new Error("Failed to verify user context");
+            console.error("Token verification failed:", error);
+            throw new Error(`Failed to verify user context: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 }
