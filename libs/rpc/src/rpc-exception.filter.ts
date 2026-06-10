@@ -1,39 +1,34 @@
-import { ArgumentsHost, Catch } from "@nestjs/common";
-import { BaseExceptionFilter } from "@nestjs/core";
+import { ArgumentsHost, Catch, RpcExceptionFilter, HttpException, HttpStatus, Logger } from "@nestjs/common";
 import { RpcException } from "@nestjs/microservices";
-import { Response } from "express";
+import { Observable, throwError } from "rxjs";
 import { RpcErrorPayload } from "./rpc.types";
 
 @Catch()
-export class RpcAllExceptionsFilter extends BaseExceptionFilter {
-    catch(exception: any, host: ArgumentsHost){
+export class RpcAllExceptionsFilter implements RpcExceptionFilter<any> {
+    private readonly logger = new Logger(RpcAllExceptionsFilter.name);
 
-        if(exception instanceof RpcException){
-            return super.catch(exception, host);
+    catch(exception: any, host: ArgumentsHost): Observable<any> {
+        this.logger.error(`Caught exception in RPC layer: ${exception.message || exception}`, exception.stack);
+
+        if (exception instanceof RpcException) {
+            return throwError(() => exception.getError());
         }
 
-        const status = exception?.getStatus?.();
-        const ctx = host.switchToHttp();
-            const request = ctx.getRequest();
-            const response = ctx.getResponse<Response>();    
-
-        if(status == 400 ){
-            const payload:RpcErrorPayload = {
-                code: 'VALIDATION_ERROR',
-                message: 'Validation failed',
-                details: response
-            }
-
-            return super.catch(new RpcException(payload), host);
+        if (exception instanceof HttpException) {
+            const status = exception.getStatus();
+            const payload: RpcErrorPayload = {
+                code: status === HttpStatus.BAD_REQUEST ? 'VALIDATION_ERROR' : 'INTERNAL_SERVER_ERROR',
+                message: exception.message || 'Validation failed',
+                details: exception.getResponse?.(),
+            };
+            return throwError(() => payload);
         }
 
-        const payload:RpcErrorPayload = {
+        const payload: RpcErrorPayload = {
             code: 'INTERNAL_SERVER_ERROR',
-            message: 'Internal error',
-        }
-        return super.catch(new RpcException(payload), host);
-
+            message: exception.message || 'Internal error',
+        };
+        return throwError(() => payload);
     }
 }
 export default RpcAllExceptionsFilter;
-    

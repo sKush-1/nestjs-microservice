@@ -3,6 +3,7 @@ import { Reflector } from "@nestjs/core";
 import { AuthService } from "./auth.service";
 import { UsersService } from "../users/users.service";
 import { IS_PUBLIC_KEY } from "./public.decorator";
+import { REQUIRED_ROLE_KEY } from "./admin.decorator";
 import { Observable } from "rxjs";
 
 @Injectable()
@@ -59,7 +60,7 @@ export class JwtAuthGuard implements CanActivate {
             role: dbUser.role
         }
         req.user = user;
-        const requiredRole = this.reflector.getAllAndOverride<'admin' | 'user'>('REQUIRED_ROLE_KEY', [
+        const requiredRole = this.reflector.getAllAndOverride<'admin' | 'user'>(REQUIRED_ROLE_KEY, [
             context.getHandler(),
             context.getClass()
         ]);
