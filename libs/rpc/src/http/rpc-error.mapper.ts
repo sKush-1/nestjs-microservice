@@ -1,6 +1,9 @@
 import { BadRequestException, ForbiddenException, InternalServerErrorException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 
 export function mapRpcErrorToHttpStatus(err:any): never{
+    if (!err?.error) {
+        console.error('RPC Error details:', err);
+    }
     const payload = err?.error
     const code = payload?.code as string || 'Undefined error code';
     const message = payload?.message as string || 'Undefined error message'; 

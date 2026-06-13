@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { SearchModule } from './search.module';
+import { applyToMicroserviceLayer } from '@app/rpc';
 
 async function bootstrap() {
   process.title = "search";
@@ -16,6 +17,7 @@ async function bootstrap() {
       durable: false,
     },
   })
+  applyToMicroserviceLayer(app);
   await app.enableShutdownHooks();
   await app.listen();
 
